@@ -1,0 +1,117 @@
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//foundation/arkui/ace_engine/ace_config.gni")
+
+source_set("ace_resource") {
+  include_dirs = [ "//third_party/bounds_checking_function/include" ]
+
+  # add resource file here
+  sources = [
+    "ace_res_config.cpp",
+    "ace_res_key_parser.cpp",
+    "data_provider_manager.cpp",
+    "internal_resource.cpp",
+    "shared_image_manager.cpp",
+  ]
+  if (current_os == "mac" || current_os == "mingw" || current_os == "ios" ||
+      current_os == "linux" || current_os == "android") {
+    deps = [ ":binary_resource_mac_and_windows" ]
+    sources -= [ "internal_resource.cpp" ]
+    sources += [ "internal_resource_previewer.cpp" ]
+  } else {
+    deps = [ ":binary_resource" ]
+  }
+  configs += [ "$ace_root:ace_config" ]
+
+  if (current_os == "mingw") {
+    cflags_cc = [ "-std=c++17" ]
+  }
+}
+
+source_set("binary_resource") {
+  deps = [ ":objcopy_resource" ]
+  ace_resource_dir =
+      get_label_info(":binary_resource($current_toolchain)", "target_out_dir")
+  sources = [
+    "$ace_resource_dir/entry.o",
+    "$ace_resource_dir/errorcode.o",
+    "$ace_resource_dir/indexletter_bar.o",
+  ]
+}
+
+source_set("binary_resource_mac_and_windows") {
+  deps = [ ":objcopy_resource_mac_and_windows" ]
+  ace_resource_dir =
+      get_label_info(":binary_resource($current_toolchain)", "target_out_dir")
+  sources = [
+    "$ace_resource_dir/entry.c",
+    "$ace_resource_dir/errorcode.c",
+    "$ace_resource_dir/indexletter_bar.c",
+  ]
+}
+
+action_foreach("objcopy_resource") {
+  # add resource file here
+  sources = [
+    "binary/i18n/entry.json",
+    "binary/i18n/errorcode.json",
+    "binary/indexletter_bar.json",
+  ]
+
+  ace_resource_dir =
+      get_label_info(":binary_resource($current_toolchain)", "target_out_dir")
+
+  outputs = [ "$ace_resource_dir/{{source_name_part}}.o" ]
+
+  objcopy_tool = objcopy_default
+  script = "$flutter_root/engine/flutter/sky/tools/objcopy.py"
+  if (target_cpu == "x86_64") {
+    objcopy_tool = objcopy_x86_64
+  }
+
+  args = [
+    "--objcopy",
+    rebase_path("$objcopy_tool"),
+    "--input",
+    "{{source}}",
+    "--output",
+    rebase_path("$ace_resource_dir/") + "{{source_name_part}}.o",
+    "--arch",
+    current_cpu,
+  ]
+}
+
+action_foreach("objcopy_resource_mac_and_windows") {
+  # add resource file here
+  sources = [
+    "binary/i18n/entry.json",
+    "binary/i18n/errorcode.json",
+    "binary/indexletter_bar.json",
+  ]
+
+  ace_resource_dir =
+      get_label_info(":binary_resource($current_toolchain)", "target_out_dir")
+
+  outputs = [ "$ace_resource_dir/{{source_name_part}}.c" ]
+
+  script = "$ace_root/build/tools/build_resource_to_bytecode.py"
+  out_target = rebase_path("$ace_resource_dir/") + "{{source_name_part}}.c"
+
+  args = [
+    "--input",
+    "{{source}}",
+    "--output",
+    out_target,
+  ]
+}

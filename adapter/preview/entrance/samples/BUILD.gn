@@ -1,0 +1,299 @@
+# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
+import("//foundation/arkui/ace_engine/adapter/preview/sdk/sharedlib_config.gni")
+import("//foundation/arkui/ace_engine/interfaces/napi/kits/napi_lib.gni")
+
+ace_devices = [
+  "phone",
+  "tv",
+  "wearable",
+  "tablet",
+  "card",
+  "car",
+]
+
+foreach(device, ace_devices) {
+  ohos_executable("ace_${device}_test") {
+    ohos_test = true
+    test_output_dir = "$root_out_dir/common/samples"
+    defines = [ "USE_GLFW_WINDOW" ]
+    cflags_cc = []
+    deps = []
+    config = {
+    }
+    if (defined(current_platform.config)) {
+      config = current_platform.config
+    }
+    if (defined(config.defines)) {
+      defines += config.defines
+    }
+    if (defined(config.cflags_cc)) {
+      cflags_cc += config.cflags_cc
+    }
+    if (defined(config.libace_target)) {
+      deps += [ config.libace_target ]
+    }
+    include_dirs = [
+      "$ace_root",
+      "$ace_root/frameworks",
+      "$flutter_root/glfw/include",
+      "//foundation/window/window_manager",
+    ]
+    deps += [ ":copy_preview_shared_library" ]
+    sources = [
+      "ace_${device}_test.cpp",
+      "event_adapter.cpp",
+    ]
+
+    external_deps = [
+      "graphic_2d:librender_service_client",
+      "window_manager:previewer_window",
+    ]
+
+    if (use_mingw_win) {
+      libs = [ "pthread" ]
+    }
+    subsystem_name = ace_engine_subsystem
+    part_name = ace_engine_part
+  }
+}
+
+# Install packages
+group("previewer_demo") {
+  if (is_wearable_product) {
+    deps = [ ":ace_wearable_test" ]
+  } else {
+    deps = [
+      ":ace_car_test",
+      ":ace_card_test",
+      ":ace_phone_test",
+      ":ace_tablet_test",
+      ":ace_tv_test",
+    ]
+  }
+}
+
+common_bin += [
+  # The dynamic librarys of hiviewdfx subsystem.
+  {
+    label = "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog"
+    subsystem_name = "hiviewdfx"
+    part_name = "hilog"
+  },
+
+  # The dynamic librarys of IDE subsystem.
+  {
+    label = "//ide/tools/previewer/util:ide_util"
+    subsystem_name = "ide"
+    part_name = "previewer"
+  },
+  {
+    label = "//ide/tools/previewer/jsapp/rich/external:ide_extension"
+    subsystem_name = "ide"
+    part_name = "previewer"
+  },
+
+  # The dynamic librarys of rosen window subsystem.
+  {
+    label = "//foundation/window/window_manager/previewer:previewer_window"
+    subsystem_name = "window"
+    part_name = "window_manager"
+  },
+]
+
+if (is_mingw || is_mac) {
+  common_bin += [
+    # The dynamic librarys of rosen window subsystem.
+    {
+      label =
+          "//foundation/window/window_manager/previewer:previewer_window_napi"
+      subsystem_name = "window"
+      part_name = "window_manager"
+    },
+
+    # The napi dynamic librarys of ability subsystem.
+    {
+      label = "//foundation/ability/ability_runtime/frameworks/simulator/ability_simulator:ability_simulator"
+      subsystem_name = "ability"
+      part_name = "ability_runtime"
+    },
+    {
+      label = "//foundation/ability/ability_runtime/frameworks/simulator/common:ability_simulator_common"
+      subsystem_name = "ability"
+      part_name = "ability_runtime"
+    },
+    {
+      label = "//foundation/ability/ability_base:string_utils"
+      subsystem_name = "ability"
+      part_name = "ability_base"
+    },
+  ]
+  napi_modules += [
+    {
+      prefix = "app/ability"
+      shard_libs = [
+        # The napi dynamic librarys of ability subsystem.
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/uiability:uiability"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+      ]
+    },
+    {
+      prefix = "ability"
+
+      # The napi dynamic librarys of ability subsystem.
+      shard_libs = [
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/want_constant:wantconstant_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+      ]
+    },
+    {
+      prefix = "application"
+      shard_libs = [
+        # The napi dynamic librarys of rosen window subsystem.
+        {
+          label = "//foundation/window/window_manager/previewer/window_stage_modules:windowstage"
+          subsystem_name = "window"
+          part_name = "window_manager"
+          lib_names = [ "windowstage" ]
+        },
+
+        # The napi dynamic librarys of ability subsystem.
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/ability:ability_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/ability_constant:abilityconstant_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/ability_context:abilitycontext_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/ability_stage:ability_stage_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/ability_stage_context:ability_stage_context_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/application_context:applicationcontext_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/caller:caller_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/callee:callee"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/context:context_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+        {
+          label = "//foundation/ability/ability_runtime/frameworks/simulator/napi_module/configuration_constant:configurationconstant_napi"
+          subsystem_name = "ability"
+          part_name = "ability_runtime"
+        },
+      ]
+    },
+  ]
+}
+
+# All dynamic libraries to be copied to the path "/previewer/common/bin/module/",
+# which are called by the napi framework, can be added to this script.
+foreach(module, napi_modules) {
+  ohos_copy("copy_napi_${module.prefix}libs") {
+    deps = []
+    sources = []
+    foreach(shard_lib, module.shard_libs) {
+      subsystem_name = shard_lib.subsystem_name
+      part_name = shard_lib.part_name
+      deps += [ shard_lib.label ]
+      out_path = get_label_info(shard_lib.label, "root_out_dir")
+      lib_names = []
+      if (defined(shard_lib.lib_names)) {
+        lib_names += shard_lib.lib_names
+      } else {
+        cur_lib = get_label_info(shard_lib.label, "name")
+        lib_names += [ string_replace(cur_lib, "lib", "", 1) ]
+      }
+      foreach(lib_name, lib_names) {
+        sources += [ "${out_path}/${subsystem_name}/${part_name}/lib${lib_name}${dylib_suffix}" ]
+      }
+    }
+
+    # Set the output directory for all dynamic libraries.
+    if (module.prefix == "") {
+      outputs = [ "${root_out_dir}/common/samples/module/{{source_file_part}}" ]
+    } else {
+      outputs = [ "${root_out_dir}/common/samples/module/${module.prefix}/{{source_file_part}}" ]
+    }
+  }
+}
+
+# All dynamic libraries to be copied to the path "/previewer/common/bin/",
+# which are related to the previewer, can be added to this script.
+ohos_copy("copy_preview_shared_library") {
+  deps = []
+  foreach(module, napi_modules) {
+    deps += [ ":copy_napi_${module.prefix}libs" ]
+  }
+
+  sources = [
+    "//base/global/system_resources/fonts",
+    "//foundation/arkui/ace_engine/adapter/preview/sdk/fontconfig.json",
+    "//third_party/icu/ohos_icu4j/data/icudt69l.dat",
+  ]
+
+  foreach(item, common_bin) {
+    subsystem_name = item.subsystem_name
+    part_name = item.part_name
+    deps += [ item.label ]
+    out_path = get_label_info(item.label, "root_out_dir")
+    lib_names = []
+    if (defined(item.lib_names)) {
+      lib_names += item.lib_names
+    } else {
+      lib_names +=
+          [ string_replace(get_label_info(item.label, "name"), "lib", "", 1) ]
+    }
+    foreach(lib_name, lib_names) {
+      sources += [ "${out_path}/${subsystem_name}/${part_name}/lib${lib_name}${dylib_suffix}" ]
+    }
+  }
+
+  outputs = [ "${root_out_dir}/common/samples/{{source_file_part}}" ]
+}

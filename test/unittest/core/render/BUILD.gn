@@ -1,0 +1,59 @@
+# Copyright (c) 2023 iSoftStone Information Technology (Group) Co.,Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//foundation/arkui/ace_engine/test/unittest/ace_unittest.gni")
+
+ace_unittest("painter_test") {
+  type = "new"
+  module_output = "render"
+  sources = [
+    "border_image_painter_test_ng.cpp",
+    "circle_painter_test_ng.cpp",
+    "drawing_prop_convertor_test_ng.cpp",
+    "ellipse_painter_test_ng.cpp",
+    "image_painter_test_ng.cpp",
+    "line_painter_test_ng.cpp",
+    "polygon_painter_test_ng.cpp",
+    "render_context_test_ng.cpp",
+    "render_property_test_ng.cpp",
+    "shape_painter_test_ng.cpp",
+  ]
+}
+
+ace_unittest("drawing_prop_convertor_test_ng") {
+  type = "new"
+  module_output = "render"
+  sources = [ "drawing_prop_convertor_test_ng.cpp" ]
+}
+
+ace_unittest("render_context_test_ng") {
+  type = "new"
+  module_output = "render"
+  sources = [ "render_context_test_ng.cpp" ]
+}
+
+ace_unittest("render_property_test_ng") {
+  type = "new"
+  module_output = "render"
+  sources = [ "render_property_test_ng.cpp" ]
+}
+
+group("render_unittest") {
+  testonly = true
+  deps = [
+    ":drawing_prop_convertor_test_ng",
+    ":painter_test",
+    ":render_context_test_ng",
+    ":render_property_test_ng",
+  ]
+}

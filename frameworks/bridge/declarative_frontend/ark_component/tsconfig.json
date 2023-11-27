@@ -1,0 +1,48 @@
+{
+    "files": [
+        "src/ArkColor.ts",
+        "src/ArkClassDefine.ts",
+        "src/ArkComponent.ts",
+        "src/ArkButton.ts",
+        "src/ArkLoadingProgress.ts",
+        "src/ArkRefresh.ts",
+        "src/ArkScroll.ts",
+        "src/ArkStack.ts",
+        "src/ArkImage.ts",
+        "src/ArkText.ts",
+        "src/ArkTextArea.ts",
+        "src/ArkTextInput.ts",
+        "src/ArkToggle.ts",
+        "src/ArkSelect.ts",
+        "src/ArkRadio.ts",
+        "src/ArkTimePicker.ts",
+        "src/ArkTextPicker.ts",
+        "src/ArkSlider.ts",
+        "src/ArkRating.ts",
+        "src/ArkCheckbox.ts",
+        "src/ArkDivider.ts",
+        "src/ArkNavDestination.ts",
+        "src/ArkCounter.ts",
+        "src/ArkCheckboxGroup.ts",
+        "src/ArkGridCol.ts",
+        "src/ArkPanel.ts",
+        "src/ArkNavigation.ts",
+        "src/ArkRichEditor.ts",
+        "src/ArkNavRouter.ts",
+        "src/ArkNavigator.ts",
+    ],
+
+    "compilerOptions": {
+        "module": "none",
+        "target": "ES2016",
+        "outDir": "../engine/",
+        "outFile": "../engine/arkComponent.js",
+        "rootDir": "./src/",
+        "declaration": false,
+        "noEmitOnError": true,
+        "experimentalDecorators": true,
+        "lib": [
+            "ES2016"
+        ],
+    }
+}

@@ -1,0 +1,110 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
+import("../../../build/uicast.gni")
+
+# build core sources
+template("ace_core_pipeline_ng_source_set") {
+  forward_variables_from(invoker, "*")
+
+  ohos_source_set(target_name) {
+    subsystem_name = ace_engine_subsystem
+    part_name = ace_engine_part
+    if (current_os == "ohos") {
+      sanitize = {
+        integer_overflow = true
+        boundary_sanitize = true
+        debug = ace_sanitize_debug
+      }
+    }
+    defines += invoker.defines
+    defines += uicast_configs.uicast_defines
+
+    # add common source file needed by all product platform here
+    sources = [
+      # context
+      "pipeline_context.cpp",
+
+      # ui scheduler
+      "ui_task_scheduler.cpp",
+    ]
+
+    configs = [
+      "$ace_root:ace_config",
+      "$ace_flutter_engine_root:flutter_config",
+    ]
+
+    deps = [
+      "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform",
+      "$ace_root/frameworks/core/components/theme:build_theme_code",
+      "$skia_root_new:skia_$platform",
+    ]
+    external_deps = []
+    if (enable_graphic_text_gine) {
+      deps -= [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
+    }
+
+    if (defined(config.enable_rosen_backend) && config.enable_rosen_backend) {
+      if (is_arkui_x) {
+        deps += [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client_static" ]
+      } else {
+        external_deps += [ "graphic_2d:librender_service_client" ]
+        if (ace_use_rosen_drawing) {
+          external_deps += [ "graphic_2d:2d_graphics" ]
+        }
+      }
+
+      deps += [ "$ace_root/frameworks/core/components_ng/render:ace_core_components_render_ng_$platform" ]
+      include_dirs = [
+        "//foundation/window/window_manager",
+        "//foundation/window/window_manager/interfaces/innerkits",
+      ]
+    }
+
+    if (platform == "ohos" && defined(config.enable_native_view) &&
+        config.enable_native_view) {
+      sources += [ "layers/ace_scene_builder.cpp" ]
+      deps += [ "$ace_flutter_engine_root/ohos_layers:flutter_ohos_layers" ]
+    }
+
+    cflags_cc = []
+    cflags_cc += invoker.cflags_cc
+  }
+}
+
+foreach(item, ace_platforms) {
+  ace_core_pipeline_ng_source_set("ace_core_pipeline_ng_" + item.name) {
+    platform = item.name
+
+    if (defined(item.config)) {
+      config = item.config
+    } else {
+      config = {
+      }
+    }
+
+    if (defined(config.defines)) {
+      defines = config.defines
+    } else {
+      defines = []
+    }
+
+    if (defined(config.cflags_cc)) {
+      cflags_cc = config.cflags_cc
+    } else {
+      cflags_cc = []
+    }
+  }
+}

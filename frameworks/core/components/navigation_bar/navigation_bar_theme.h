@@ -1,0 +1,432 @@
+/*
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef FOUNDATION_ACE_FRAMEWORKS_CORE_COMPONENTS_NAVIGATION_BAR_NAVIGATION_BAR_THEME_H
+#define FOUNDATION_ACE_FRAMEWORKS_CORE_COMPONENTS_NAVIGATION_BAR_NAVIGATION_BAR_THEME_H
+
+#include <cstdint>
+#include "base/utils/string_utils.h"
+#include "core/components/theme/theme.h"
+#include "core/components/theme/theme_constants.h"
+#include "core/components/theme/theme_constants_defines.h"
+#include "core/components_ng/property/border_property.h"
+
+namespace OHOS::Ace {
+
+class NavigationBarTheme : public virtual Theme {
+    DECLARE_ACE_TYPE(NavigationBarTheme, Theme);
+
+public:
+    class Builder {
+    public:
+        Builder() = default;
+        ~Builder() = default;
+
+        RefPtr<NavigationBarTheme> Build(const RefPtr<ThemeConstants>& themeConstants) const
+        {
+            RefPtr<NavigationBarTheme> theme = AceType::Claim(new NavigationBarTheme());
+            if (!themeConstants) {
+                return theme;
+            }
+            theme->backResourceId_ = themeConstants->GetResourceId(THEME_NAVIGATION_BAR_RESOURCE_ID_BACK);
+            theme->moreResourceId_ = themeConstants->GetResourceId(THEME_NAVIGATION_BAR_RESOURCE_ID_MORE);
+
+            auto themeStyle = themeConstants->GetThemeStyle();
+            if (!themeStyle) {
+                return theme;
+            }
+            auto pattern = themeStyle->GetAttr<RefPtr<ThemeStyle>>(THEME_PATTERN_NAVIGATION_BAR, nullptr);
+            if (pattern) {
+                theme->height_ = pattern->GetAttr<Dimension>("navigation_bar_height", 0.0_vp);
+                theme->heightEmphasize_ = pattern->GetAttr<Dimension>("navigation_bar_height_emphasize", 0.0_vp);
+                theme->menuZoneSize_ = pattern->GetAttr<Dimension>("navigation_bar_menu_zone_size", 0.0_vp);
+                theme->menuIconSize_ = pattern->GetAttr<Dimension>("navigation_bar_menu_icon_size", 0.0_vp);
+                theme->logoIconSize_ = pattern->GetAttr<Dimension>("navigation_bar_logo_icon_size", 0.0_vp);
+                theme->buttonNormalColor_ = pattern->GetAttr<Color>("navigation_bar_button_normal_color", Color());
+                theme->defaultPaddingEnd_ = pattern->GetAttr<Dimension>("navigation_bar_default_padding_end", 0.0_vp);
+                theme->menuItemPadding_ = pattern->GetAttr<Dimension>("navigation_bar_menu_item_padding", 0.0_vp);
+                theme->titleMinPadding_ = pattern->GetAttr<Dimension>("navigation_bar_title_min_padding", 0.0_vp);
+                auto menuCount =
+                    static_cast<int32_t>(pattern->GetAttr<double>("navigation_bar_most_menu_item_count_in_bar", 0.0));
+                theme->mostMenuItemCountInBar_ =
+                    menuCount < 0 ? theme->mostMenuItemCountInBar_ : static_cast<uint32_t>(menuCount);
+                theme->titleColor_ = pattern->GetAttr<Color>("title_color", Color::WHITE);
+                theme->titleFontSize_  = pattern->GetAttr<Dimension>("title_text_font_size", 0.0_vp);
+                theme->titleFontSizeMin_ = pattern->GetAttr<Dimension>("title_text_font_size_min", 0.0_vp);
+                theme->titleFontSizeBig_  = pattern->GetAttr<Dimension>("title_text_font_size_big", 0.0_vp);
+                theme->subTitleColor_ = pattern->GetAttr<Color>("sub_title_text_color", Color::WHITE);
+                theme->subTitleFontSize_  = pattern->GetAttr<Dimension>("sub_title_text_font_size", 0.0_vp);
+                theme->menuIconColor_ = pattern->GetAttr<Color>("menu_icon_color", Color::WHITE);
+                theme->buttonPressedColor_ = pattern->GetAttr<Color>("button_bg_color_pressed", Color::WHITE);
+                theme->buttonFocusColor_ = pattern->GetAttr<Color>("button_bg_color_focused", Color::WHITE);
+                theme->buttonHoverColor_ = pattern->GetAttr<Color>("button_bg_color_hovered", Color::WHITE);
+                theme->buttonCornerRadius_  = pattern->GetAttr<Dimension>("button_corner_radius", 0.0_vp);
+                theme->maxPaddingStart_ = pattern->GetAttr<Dimension>("title_left_spacing", 0.0_vp);
+                theme->maxPaddingEnd_ = pattern->GetAttr<Dimension>("title_right_spacing", 0.0_vp);
+                theme->defaultPaddingStart_ = pattern->GetAttr<Dimension>("back_button_left_spacing", 0.0_vp);
+                theme->backButtonIconColor_ = pattern->GetAttr<Color>("back_button_icon_color", Color::WHITE);
+                theme->alphaDisabled_ = pattern->GetAttr<double>("button_alpha_disabled", 0.0);
+                auto dividerShadowEnable = pattern->GetAttr<std::string>("divider_shadow_enable", "0");
+                theme->dividerShadowEnable_ = StringUtils::StringToInt(dividerShadowEnable);
+                theme->navigationGroupColor_ = pattern->GetAttr<Color>("navigation_group_color", Color::TRANSPARENT);
+                auto navBarUnfocusEffectEnable = pattern->GetAttr<std::string>("section_unfocus_effect_enable", "0");
+                theme->navBarUnfocusEffectEnable_ = StringUtils::StringToInt(navBarUnfocusEffectEnable);
+                theme->navBarUnfocusColor_ = pattern->GetAttr<Color>("section_unfocus_color", Color::TRANSPARENT);
+            }
+            ParsePattern(themeConstants->GetThemeStyle(), theme);
+            return theme;
+        }
+
+    private:
+        void ParsePattern(const RefPtr<ThemeStyle>& themeStyle, const RefPtr<NavigationBarTheme>& theme) const
+        {
+            if (!themeStyle) {
+                return;
+            }
+            auto pattern = themeStyle->GetAttr<RefPtr<ThemeStyle>>(THEME_PATTERN_NAVIGATION_BAR, nullptr);
+            if (!pattern) {
+                return;
+            }
+            theme->toolbarBgColor_ = pattern->GetAttr<Color>("toolbar_bg_color", Color(0xfff1f3f5));
+            theme->toolbarBgColorWithOpacity_ = theme->toolbarBgColor_.BlendOpacity(theme->toolbarBgAlpha_);
+            theme->toolbarDividerWidth_ = Dimension(1.0, DimensionUnit::PX);
+            theme->toolbarDividerColor_ = pattern->GetAttr<Color>("toolbar_divider_color", Color(0x33182431));
+            theme->toolbarItemFocusBorderColor_ =
+                pattern->GetAttr<Color>("toolbar_item_focus_color", Color(0xff007dff));
+            theme->toolbarItemBorderRadiusValue_ =
+                pattern->GetAttr<Dimension>("toolbar_item_bg_button_border_radius", 8.0_vp);
+            theme->toolbarItemBorderRadius_.SetRadius(theme->toolbarItemBorderRadiusValue_);
+            theme->toolbarItemFontSize_ = pattern->GetAttr<Dimension>("toolbar_item_font_size", 10.0_vp);
+            theme->toolbarItemFontColor_ = pattern->GetAttr<Color>("toolbar_item_font_color", Color(0x182431));
+            theme->toolbarIconColor_ = pattern->GetAttr<Color>("toolbar_item_icon_color", Color(0x182431));
+            theme->toolbarActiveIconColor_ =
+                pattern->GetAttr<Color>("toolbar_item_active_icon_color", Color(0xff007dff));
+            theme->toolbarActiveTextColor_ =
+                pattern->GetAttr<Color>("toolbar_item_active_text_color", Color(0xff007dff));
+            auto dividerShadowEnable = pattern->GetAttr<std::string>("divider_shadow_enable", "0");
+            theme->dividerShadowEnable_ = StringUtils::StringToInt(dividerShadowEnable);
+            theme->navigationGroupColor_ = pattern->GetAttr<Color>("navigation_group_color", Color::TRANSPARENT);
+            auto navBarUnfocusEffectEnable = pattern->GetAttr<std::string>("section_unfocus_effect_enable", "0");
+            theme->navBarUnfocusEffectEnable_ = StringUtils::StringToInt(navBarUnfocusEffectEnable);
+            theme->navBarUnfocusColor_ = pattern->GetAttr<Color>("section_unfocus_color", Color::TRANSPARENT);
+        }
+    };
+
+    ~NavigationBarTheme() override = default;
+
+    const Color& GetTitleColor() const
+    {
+        return titleColor_;
+    }
+
+    const Color& GetSubTitleColor() const
+    {
+        return subTitleColor_;
+    }
+    const Dimension& GetTitleFontSizeBig() const
+    {
+        return titleFontSizeBig_;
+    }
+
+    const Dimension& GetTitleFontSize() const
+    {
+        return titleFontSize_;
+    }
+
+    const Dimension& GetTitleFontSizeMin() const
+    {
+        return titleFontSizeMin_;
+    }
+
+    const Dimension& GetSubTitleFontSize() const
+    {
+        return subTitleFontSize_;
+    }
+    const Dimension& GetHeight() const
+    {
+        return height_;
+    }
+    const Dimension& GetHeightEmphasize() const
+    {
+        return heightEmphasize_;
+    }
+    InternalResource::ResourceId GetBackResourceId() const
+    {
+        return backResourceId_;
+    }
+    InternalResource::ResourceId GetMoreResourceId() const
+    {
+        return moreResourceId_;
+    }
+    const Dimension& GetMenuZoneSize() const
+    {
+        return menuZoneSize_;
+    }
+    const Dimension& GetMenuIconSize() const
+    {
+        return menuIconSize_;
+    }
+    const Dimension& GetLogoIconSize() const
+    {
+        return logoIconSize_;
+    }
+    const Color& GetMenuIconColor() const
+    {
+        return menuIconColor_;
+    }
+    const Color& GetButtonNormalColor() const
+    {
+        return buttonNormalColor_;
+    }
+    const Color& GetButtonPressedColor() const
+    {
+        return buttonPressedColor_;
+    }
+    const Color& GetButtonFocusColor() const
+    {
+        return buttonFocusColor_;
+    }
+    const Color& GetButtonHoverColor() const
+    {
+        return buttonHoverColor_;
+    }
+    const Dimension& GetButtonCornerRadius() const
+    {
+        return buttonCornerRadius_;
+    }
+    const Dimension& GetMaxPaddingStart() const
+    {
+        return maxPaddingStart_;
+    }
+    const Dimension& GetDefaultPaddingStart() const
+    {
+        return defaultPaddingStart_;
+    }
+    const Dimension& GetDefaultPaddingEnd() const
+    {
+        return defaultPaddingEnd_;
+    }
+    const Dimension& GetMaxPaddingEnd() const
+    {
+        return maxPaddingEnd_;
+    }
+    const Dimension& GetMenuItemPadding() const
+    {
+        return menuItemPadding_;
+    }
+    const Dimension& GetTitleMinPadding() const
+    {
+        return titleMinPadding_;
+    }
+    uint32_t GetMostMenuItemCountInBar() const
+    {
+        return mostMenuItemCountInBar_;
+    }
+
+    const Color& GetBackButtonIconColor() const
+    {
+        return backButtonIconColor_;
+    }
+
+    double GetAlphaDisabled() const
+    {
+        return alphaDisabled_;
+    }
+
+    const Color& GetToolBarBgColor() const
+    {
+        return toolbarBgColorWithOpacity_;
+    }
+    const Dimension& GetToolBarDividerWidth() const
+    {
+        return toolbarDividerWidth_;
+    }
+    const Color& GetToolBarDividerColor() const
+    {
+        return toolbarDividerColor_;
+    }
+    const Color& GetToolBarItemFocusColor() const
+    {
+        return toolbarItemFocusBorderColor_;
+    }
+    const Dimension& GetToolBarItemFocusBorderWidth() const
+    {
+        return toolbarItemFocusBorderWidth_;
+    }
+    const NG::BorderRadiusProperty& GetToolBarItemBorderRadius() const
+    {
+        return toolbarItemBorderRadius_;
+    }
+    const Dimension& GetToolBarItemFontSize() const
+    {
+        return toolbarItemFontSize_;
+    }
+    const Dimension& GetToolBarItemMinFontSize() const
+    {
+        return toolbarItemMinFontSize_;
+    }
+    const Color& GetToolBarItemFontColor() const
+    {
+        return toolbarItemFontColor_;
+    }
+    double GetToolbarItemDisabledAlpha() const
+    {
+        return toolbarItemDisabledAlpha_;
+    }
+    const Color& GetToolbarIconColor() const
+    {
+        return toolbarIconColor_;
+    }
+    const Dimension& GetToolbarIconSize() const
+    {
+        return toolbarIconSize_;
+    }
+    const Color& GetToolbarActiveIconColor() const
+    {
+        return toolbarActiveIconColor_;
+    }
+    const Color& GetToolBarItemActiveFontColor() const
+    {
+        return toolbarActiveTextColor_;
+    }
+    uint32_t GetToolbarItemTextMaxLines() const
+    {
+        return toolbarItemTextMaxLines_;
+    }
+    const Dimension& GetToolbarItemSafeInterval() const
+    {
+        return toolbarItemSafeInterval_;
+    }
+    const Dimension& GetToolbarItemHorizontalPadding() const
+    {
+        return toolbarItemHorizontalPadding_;
+    }
+    const Dimension& GetToolbarItemVerticalPadding() const
+    {
+        return toolbarItemVerticalPadding_;
+    }
+    const Dimension& GetToolbarItemTopPadding() const
+    {
+        return toolbarItemTopPadding_;
+    }
+    const Dimension& GetToolbarItemLeftOrRightPadding() const
+    {
+        return toolbarItemLeftOrRightPadding_;
+    }
+    const Dimension& GetToolbarItemHeigth() const
+    {
+        return toolbarItemHeight_;
+    }
+    const Dimension& GetToolbarItemBottomPadding() const
+    {
+        return toolbarItemBottomPadding_;
+    }
+    const Dimension& GetToolbarItemMargin() const
+    {
+        return toolbarItemMargin_;
+    }
+    const Dimension& GetToolbarItemSpecialMargin() const
+    {
+        return toolbarItemSpecialMargin_;
+    }
+    uint32_t GetToolbarRotationLimitGridCount() const
+    {
+        return toolbarLimitGridCount_;
+    }
+    uint32_t GetDividerShadowEnable() const
+    {
+        return dividerShadowEnable_;
+    }
+    const Color& GetNavigationGroupColor() const
+    {
+        return navigationGroupColor_;
+    }
+    uint32_t GetNavBarUnfocusEffectEnable() const
+    {
+        return navBarUnfocusEffectEnable_;
+    }
+    const Color& GetNavBarUnfocusColor() const
+    {
+        return navBarUnfocusColor_;
+    }
+protected:
+    NavigationBarTheme() = default;
+
+private:
+    Color titleColor_;
+    Color subTitleColor_;
+    Dimension titleFontSizeBig_;
+    Dimension titleFontSize_;
+    Dimension titleFontSizeMin_;
+    Dimension subTitleFontSize_;
+    Dimension height_;
+    Dimension heightEmphasize_;
+    InternalResource::ResourceId backResourceId_ = InternalResource::ResourceId::NO_ID;
+    InternalResource::ResourceId moreResourceId_ = InternalResource::ResourceId::NO_ID;
+    Dimension menuZoneSize_;
+    Dimension menuIconSize_;
+    Dimension logoIconSize_;
+    Color menuIconColor_;
+    Color buttonNormalColor_;
+    Color buttonPressedColor_;
+    Color buttonFocusColor_;
+    Color buttonHoverColor_;
+    Dimension buttonCornerRadius_;
+    Dimension maxPaddingStart_;
+    Dimension maxPaddingEnd_;
+    Dimension defaultPaddingStart_;
+    Dimension defaultPaddingEnd_;
+    Dimension menuItemPadding_;
+    Dimension titleMinPadding_;
+    uint32_t mostMenuItemCountInBar_ = 0;
+    Color backButtonIconColor_;
+    double alphaDisabled_ = 0.0;
+    Color toolbarBgColor_;
+    Color toolbarBgColorWithOpacity_;
+    Dimension toolbarDividerWidth_;
+    Color toolbarDividerColor_;
+    Color toolbarItemFocusBorderColor_;
+    Dimension toolbarItemFocusBorderWidth_ = 2.0_vp;
+    Dimension toolbarItemBorderRadiusValue_;
+    NG::BorderRadiusProperty toolbarItemBorderRadius_;
+    Dimension toolbarItemFontSize_;
+    Dimension toolbarItemMinFontSize_ = 9.0_vp;
+    Color toolbarItemFontColor_;
+    double toolbarItemDisabledAlpha_ = 0.4;
+    double toolbarBgAlpha_ = 0.95;
+    Color toolbarIconColor_;
+    Dimension toolbarIconSize_ = 24.0_vp;
+    Color toolbarActiveIconColor_;
+    Color toolbarActiveTextColor_;
+    uint32_t toolbarItemTextMaxLines_ = 2;
+    Dimension toolbarItemSafeInterval_ = 8.0_vp;
+    Dimension toolbarItemHorizontalPadding_ = 8.0_vp;
+    Dimension toolbarItemVerticalPadding_ = 12.0_vp;
+    Dimension toolbarItemTopPadding_ = 8.0_vp;
+    Dimension toolbarItemLeftOrRightPadding_ = 4.0_vp;
+    Dimension toolbarItemHeight_ = 56.0_vp;
+    Dimension toolbarItemBottomPadding_ = 4.0_vp;
+    Dimension toolbarItemMargin_ = 4.0_vp;
+    Dimension toolbarItemSpecialMargin_ = 0.0_vp;
+    uint32_t toolbarLimitGridCount_ = 8;
+    uint32_t dividerShadowEnable_ = 0;
+    Color navigationGroupColor_ = Color::TRANSPARENT;
+    uint32_t navBarUnfocusEffectEnable_ = 0;
+    Color navBarUnfocusColor_ = Color::TRANSPARENT;
+};
+
+} // namespace OHOS::Ace
+
+#endif // FOUNDATION_ACE_FRAMEWORKS_CORE_COMPONENTS_NAVIGATION_BAR_NAVIGATION_BAR_THEME_H
